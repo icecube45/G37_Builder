@@ -1,0 +1,34 @@
+FROM base_buster_armhf.img
+
+PUMP 1000MB
+
+RUN <<EOF
+apt-get -y install wget software-properties-common dirmngr apt-transport-https lsb-release ca-certificates git sudo
+apt-get -y install --no-install-recommends xserver-xorg-video-all xserver-xorg-input-all xserver-xorg-core xinit x11-xserver-utils  
+apt-get -y install gstreamer1.0-plugins-good gstreamer1.0-omx xserver-xorg-video-fbturbo
+# add in pi ux tweaks (icons + lxpanel plugins)
+apt-get -y install pixflat-icons lxplug-bluetooth lxplug-volumepulse lxplug-network
+# https://github.com/openDsh/dash/issues/63#issuecomment-821121874
+bash -c "cd /home/pi && git clone https://github.com/openDsh/dash.git -b develop"
+bash -c "/home/pi/dash/install.sh --deps"
+bash -c "/home/pi/dash/install.sh --aasdk"
+bash -c "/home/pi/dash/install.sh --gstreamer"
+bash -c "/home/pi/dash/install.sh --openauto"
+bash -c "cd /home/pi && git clone https://github.com/icecube45/Dash_InfinitiG37.git"
+bash -c "mkdir /home/pi/dash/plugins/vehicle/InfinitiG37 && cp /home/pi/Dash_InfinitiG37/InfinitiG37/* /home/pi/dash/plugins/vehicle/InfinitiG37"
+bash -c "/home/pi/dash/install.sh --dash"
+bash -c "mkdir -p /home/pi/.config/openDsh"
+bash -c "cd /home/pi/dash && git remote add ice https://github.com/icecube45/dash.git"
+bash -c "cd /home/pi/openauto && git remote add ice https://github.com/icecube45/openauto.git"
+bash -c "cd /home/pi/aasdk && git remote add ice https://github.com/icecube45/aasdk.git"
+EOF
+
+# Install dash conf
+INSTALL "scripts/dash.conf" "/home/pi/.config/openDsh/dash.conf"
+# Add udev rules
+INSTALL "scripts/51-dashusb.rules" "/etc/udev/rules.d/"
+
+
+# Add autologin and dash service
+source dash_service.Pifile
+source pulseaudio_hfp_ofono.Pifile

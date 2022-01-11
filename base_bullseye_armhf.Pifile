@@ -1,0 +1,169 @@
+FROM https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2021-11-08/2021-10-30-raspios-bullseye-armhf-lite.zip
+PUMP 1000M
+
+# Update OS and sources
+RUN <<EOF
+apt-get update
+DEBIAN_FRONTEND=noninteractive apt-get -y dist-upgrade
+apt-get install -y sl
+apt-get autoremove -y
+EOF
+
+
+# Disable boot text
+RUN <<EOF
+echo "silent quiet splash loglevel=0 logo.nologo" >>  /boot/cmdline.txt
+EOF
+
+
+# Disable timesyncd for better boot time
+RUN <<EOF
+systemctl stop systemd-timesyncd
+systemctl disable systemd-timesyncd
+EOF
+
+# Apply Boomerang and touchscreen settings
+RUN <<EOF
+cat <<EOT >> /boot/config.txt
+#RGBS
+dtoverlay=vga666
+enable_dpi_lcd=1
+display_default_lcd=1
+dpi_group=2
+dpi_mode=87
+hdmi_timings=480 1 31 35 64 234 1 12 10 10 0 0 0 60 0 9600000 1
+
+#touchscreen
+dtparam=i2c_arm=on
+dtparam=i2c1=off
+dtparam=i2c0=on
+
+dtoverlay=g37_touchscreen
+EOT
+EOF
+
+# Compile touchscreen overlay
+INSTALL "scripts/g37_touchscreen.dts" "/tmp/g37_touchscreen.dts"
+RUN <<EOF
+cd /tmp
+dtc -I dts -O dtb -o g37_touchscreen.dtbo g37_touchscreen.dts
+mv g37_touchscreen.dtbo /boot/overlays/
+rm g37_touchscreen.dts
+EOF
+
+# Enable compositor
+RUN <<EOF
+echo "xcompmgr -C -c -o 0.5 -l -19 -t -10 -r 14" >> /etc/xdg/lxsession/LXDE-pi/autostart
+EOF
+
+# CAN settings
+RUN <<EOF
+cat <<EOT >> /etc/network/interfaces
+allow-hotplug can0
+iface can0 can static
+    bitrate 500000
+EOT
+EOF
+
+# Touchscreen calibration
+INSTALL "scritps/99-calibration.conf" "/usr/share/X11/xorg.conf.d/99-calibration.conf"
+
+# Mausberry setup
+RUN <<EOF
+echo '#!/bin/bash
+
+#this is the GPIO pin connected to the lead on switch labeled OUT
+GPIOpin1=24
+
+#this is the GPIO pin connected to the lead on switch labeled IN
+GPIOpin2=23
+
+#Enter the shutdown delay in minutes
+delay=2
+
+echo "$GPIOpin1" > /sys/class/gpio/export
+echo "in" > /sys/class/gpio/gpio$GPIOpin1/direction
+echo "$GPIOpin2" > /sys/class/gpio/export
+echo "out" > /sys/class/gpio/gpio$GPIOpin2/direction
+echo "1" > /sys/class/gpio/gpio$GPIOpin2/value
+let minute=$delay*60
+SD=0
+SS=0
+SS2=0
+while [ 1 = 1 ]; do
+power=$(cat /sys/class/gpio/gpio$GPIOpin1/value)
+uptime=$(</proc/uptime)
+uptime=${uptime%%.*}
+current=$uptime
+if [ $power = 1 ] && [ $SD = 0 ]
+then
+SD=1
+SS=${uptime%%.*}
+fi
+
+if [ $power = 1 ] && [ $SD = 1 ]
+then
+SS2=${uptime%%.*}
+fi
+
+if [ "$((uptime - SS))" -gt "$minute" ] && [ $SD = 1 ] && [ $power = 1 ]
+then
+poweroff
+SD=3
+fi
+
+if [ "$((uptime - SS2))" -gt '20' ] && [ $SD = 1 ]
+then
+SD=0
+fi
+
+sleep 1
+done' > /etc/switch.sh
+sudo chmod 777 /etc/switch.sh
+sudo sed -i '$ i /etc/switch.sh &' /etc/rc.local
+EOF
+
+# setup access point
+RUN <<EOF
+apt-get install -y hostapd
+systemctl unmask hostapd
+systemctl enable hostapd
+apt-get install -y dnsmasq
+cat <<EOT >> /etc/dhcpcd.conf
+interface wlan0
+    static ip_address=192.168.4.1/24
+    nohook wpa_supplicant
+EOT
+cat <<EOT >> /etc/dnsmasq.conf 
+interface=wlan0 # Listening interface
+dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
+                # Pool of IP addresses served via DHCP
+domain=wlan     # Local wireless DNS domain
+address=/gw.wlan/192.168.4.1
+                # Alias for this router
+EOT
+rfkill unblock wlan
+cat <<EOT >> /etc/hostapd/hostapd.conf
+country_code=US
+interface=wlan0
+ssid=InfinitiG37
+hw_mode=a
+channel=36
+macaddr_acl=0
+auth_algs=1
+ignore_broadcast_ssid=0
+wpa=2
+wpa_passphrase=InfinitiG30Pi
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP
+rsn_pairwise=CCMP
+EOT
+EOF
+
+
+# configure memory split and disable screensaver, set hostname
+RUN <<EOF
+raspi-config nonint do_memory_split 128
+sed -i 's/@xscreensaver -no-splash//g' /etc/xdg/lxsession/LXDE-pi/autostart
+raspi-config nonint do_hostname InfinitiG37
+EOF
