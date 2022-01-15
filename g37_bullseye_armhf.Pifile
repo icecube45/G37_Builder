@@ -35,7 +35,7 @@ EOF
 # Install dash conf
 INSTALL "scripts/dash.conf" "/home/pi/.config/openDsh/dash.conf"
 
-Install openauto conf
+# Install openauto conf
 INSTALL "scripts/openauto.ini" "/home/pi/dash/openauto.ini"
 
 # Add udev rules
