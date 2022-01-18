@@ -35,6 +35,10 @@ EOF
 # Install dash conf
 INSTALL "scripts/dash.conf" "/home/pi/.config/openDsh/dash.conf"
 
+RUN <<'EOF'
+chown pi:pi /home/pi/.config/openDsh/dash.conf
+EOF
+
 # Install openauto conf
 INSTALL "scripts/openauto.ini" "/home/pi/dash/openauto.ini"
 

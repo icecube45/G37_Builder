@@ -54,5 +54,6 @@ RUN <<EOF
 #   }
 # }
 # EOT
+apt-get -y install xcompmgr
 echo "xcompmgr -C -c -o 0.5 -l -19 -t -10 -r 14" >> /etc/xdg/lxsession/LXDE-pi/autostart
 EOF
