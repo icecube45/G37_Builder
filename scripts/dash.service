@@ -1,7 +1,7 @@
 [Unit]
 Description=Dash
-After=multi-user.target
-Requires=bluetooth.target
+Requires=multi-user.target
+
 
 [Service]
 Type=idle
@@ -12,11 +12,9 @@ Environment=DISPLAY=:0
 Environment=XAUTHORITY=/home/pi/.Xauthority
 Environment=XDG_RUNTIME_DIR=/run/user/1000
 WorkingDirectory=/home/pi/dash/
+ExecStartPre=/bin/sleep 2
 ExecStart=/home/pi/dash/bin/dash
 Restart=on-failure
 RestartSec=10s
 KillMode=process
 TimeoutSec=infinity
-
-[Install]
-WantedBy=graphical.target
