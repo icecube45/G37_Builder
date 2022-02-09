@@ -18,3 +18,6 @@ Restart=on-failure
 RestartSec=10s
 KillMode=process
 TimeoutSec=infinity
+
+[Install]
+WantedBy=graphical.target
