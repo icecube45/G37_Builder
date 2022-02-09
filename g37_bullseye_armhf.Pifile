@@ -46,6 +46,11 @@ INSTALL "scripts/openauto.ini" "/home/pi/dash/openauto.ini"
 INSTALL "scripts/51-dashusb.rules" "/etc/udev/rules.d/"
 
 RUN <<'EOF'
+chown pi:pi /home/pi/dash/openauto.ini
+EOF
+
+
+RUN <<'EOF'
 apt-get install -y xserver-xorg-input-evdev
 rm /usr/share/X11/xorg.conf.d/40-libinput.conf
 EOF
