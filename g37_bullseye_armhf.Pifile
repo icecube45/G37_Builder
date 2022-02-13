@@ -11,12 +11,12 @@ EOF
 # add in pi ux tweaks (icons + lxpanel plugins)
 RUN <<EOF
 apt-get -y install pixflat-icons lxplug-bluetooth lxplug-volumepulse lxplug-network
-bash -c "cd /home/pi && sudo -u pi git clone https://github.com/icecube45/dash.git -b androidauto_interface"
+bash -c "cd /home/pi && sudo -u pi git clone https://github.com/openDsh/dash"
 bash -c "cd /home/pi/dash && sed -i 's/\(^\s*\)\(make\)\($\)/\1make -j4/g' install.sh"
 # bash -c "cd /home/pi/dash && sed -i 's/https:\/\/github.com\/openDsh\/openauto/https:\/\/github.com\/icecube45\/openauto/g' install.sh"
 EOF
 RUN <<'EOF'
-bash -c "cd /home/pi/dash && sed -i 's/git clone \$openautoRepo/git clone \$openautoRepo -b new_services/g' install.sh"
+# bash -c "cd /home/pi/dash && sed -i 's/git clone \$openautoRepo/git clone \$openautoRepo -b new_services/g' install.sh"
 bash -c "cd /home/pi/dash && sudo -u pi ./install.sh --deps"
 bash -c "cd /home/pi/dash && sudo -u pi ./install.sh --aasdk"
 bash -c "cd /home/pi/dash && sudo -u pi ./install.sh --gstreamer"
