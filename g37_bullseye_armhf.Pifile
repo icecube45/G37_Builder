@@ -20,6 +20,7 @@ RUN <<'EOF'
 bash -c "cd /home/pi/dash && sudo -u pi ./install.sh --deps"
 bash -c "cd /home/pi/dash && sudo -u pi ./install.sh --aasdk"
 bash -c "cd /home/pi/dash && sudo -u pi ./install.sh --gstreamer"
+bash -c "cd /home/pi/dash && sudo -u pi ./install.sh --h264bitstream"
 bash -c "cd /home/pi && sudo -u pi git clone https://github.com/icecube45/openauto.git -b pi_bt_update"
 bash -c "cd /home/pi/openauto && sed -i 's/0006/b03111/g' cmake_modules/functions.cmake"
 bash -c "cd /home/pi/dash && sudo -u pi ./install.sh --openauto"
