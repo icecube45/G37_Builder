@@ -19,7 +19,7 @@ EOF
 
 # Add pi user
 RUN <<EOF
-echo "pi:$6$ghKLjE2C3qTJZtde$AjJ9HXBpawoN/iqCTU8KBtaOngUx5GLY0qkEJP0F7VKTLL5fkX7q9K4oSiZYVFJBc09NocagToQzbnNz/eph71" >> /boot/userconf
+echo "pi:\$6\$ghKLjE2C3qTJZtde\$AjJ9HXBpawoN/iqCTU8KBtaOngUx5GLY0qkEJP0F7VKTLL5fkX7q9K4oSiZYVFJBc09NocagToQzbnNz/eph71" >> /boot/userconf
 EOF
 
 
